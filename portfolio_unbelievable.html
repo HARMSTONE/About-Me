@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HARMSTONE — About</title>
+  <meta name="description" content="Unbelievable, interactive about page." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg-1:#05060a;--bg-2:#08101a;--card:#0b1220;--muted:#94a3b8;--accent:#7c3aed;--accent-2:#60a5fa}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:#cbd5e1;overflow-x:hidden}
+    *{box-sizing:border-box} a{color:inherit;text-decoration:none}
+
+    /* stacking: canvas (0), overlay (1), content (2) */
+    canvas#bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+    .bg-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(3,6,12,0.15),rgba(3,6,12,0.45));}
+
+    .maxwide{max-width:1100px;margin:0 auto;padding:28px;position:relative;z-index:2}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand-mark{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#08101a;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+
+    nav{display:none}
+    main{display:grid;grid-template-columns:1fr 330px;gap:24px;margin-top:20px}
+    @media (max-width:900px){ main{grid-template-columns:1fr} }
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.03);border-radius:14px;padding:18px;transition:transform .28s cubic-bezier(.2,.9,.3,1), box-shadow .28s}
+    .card:hover{transform:translateY(-6px) scale(1.004);box-shadow:0 18px 50px rgba(2,6,23,0.55)}
+
+    .hero{display:flex;gap:16px;align-items:center}
+    .avatar-wrap{width:160px;height:160px;border-radius:18px;overflow:hidden;border:3px solid rgba(255,255,255,0.04);position:relative}
+    .avatar-glow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:220px;height:220px;border-radius:50%;filter:blur(28px);opacity:0.75;pointer-events:none;z-index:-1;background:radial-gradient(circle at 30% 30%, rgba(124,58,237,0.22), rgba(96,165,250,0.06) 45%, transparent 60%)}
+    .avatar-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .28s, box-shadow .28s}
+    .avatar-wrap:hover .avatar-img{transform:scale(1.03);box-shadow:0 10px 40px rgba(124,58,237,0.08)}
+
+    .muted{color:var(--muted)}
+
+    /* unified button style */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:.5rem 1rem;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;font-weight:600;transition:transform .15s;cursor:pointer;text-align:center;font-family:inherit;border:0}
+    .btn:hover{transform:translateY(-2px)}
+
+    /* ensure Skills button identical and not stacking */
+    #skillsBtn{display:inline-flex;align-items:center;justify-content:center;padding:.5rem 1rem;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;font-weight:600;cursor:pointer;text-align:center;font-family:inherit;border:0;line-height:1}
+    #skillsBtn::before, #skillsBtn::after{display:none}
+
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media (max-width:700px){ .grid-3{grid-template-columns:1fr} }
+
+    .skill-track{height:10px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+    .skill-fill{height:100%;width:0;transition:width .9s}
+
+    /* games scroller: visible scrollbar dark themed (WebKit + Firefox) */
+    .hscroll{display:flex;gap:12px;overflow-x:auto;padding:12px;scroll-snap-type:x mandatory;position:relative;z-index:2}
+    .hscroll::-webkit-scrollbar{height:10px}
+    .hscroll::-webkit-scrollbar-track{background:transparent}
+    .hscroll::-webkit-scrollbar-thumb{background:linear-gradient(90deg,#1f2937,#111827);border-radius:999px;border:2px solid rgba(255,255,255,0.02)}
+    .hscroll{scrollbar-width:thin;scrollbar-color:#1f2937 transparent}
+
+    .game-card{min-width:240px;padding:16px;border-radius:12px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.03);scroll-snap-align:center;transition:transform .18s}
+    .game-card:hover{transform:translateY(-6px)}
+
+    /* reveal animation: start slightly scaled/tilted, then pop in with stagger */
+    .reveal{opacity:0;transform:translateY(18px) scale(0.985) rotateX(4deg);transform-origin:center center;transition:opacity .6s cubic-bezier(.2,.9,.3,1),transform .6s cubic-bezier(.2,.9,.3,1)}
+    .reveal.visible{opacity:1;transform:translateY(0) scale(1) rotateX(0)}
+
+    footer{text-align:center;color:var(--muted);padding:28px 0}
+  </style>
+</head>
+<body>
+  <canvas id="bgCanvas"></canvas>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <div class="maxwide">
+    <header>
+      <div class="brand">
+        <div class="brand-mark">H</div>
+        <div>
+          <div class="muted">About</div>
+          <div style="font-weight:700">HARMSTONE</div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card hero reveal" id="about">
+        <div class="avatar-wrap">
+          <div class="avatar-glow" aria-hidden="true"></div>
+          <img id="avatarImg" class="avatar-img" src="assets/avatar.jpg" alt="avatar">
+        </div>
+
+        <div style="flex:1">
+          <h1 style="margin:0;font-size:44px;font-weight:800">Hi — I'm <span id="nameText" style="color:var(--accent)">Harmstone</span></h1>
+          <p id="tagline" class="muted">I build polished digital experiences — websites, tools and game systems. I like things fast and clean.</p>
+
+          <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;color:var(--muted)">
+            <div><strong style="color:#fff">Location:</strong> Serbia</div>
+            <div><strong style="color:#fff">Available:</strong> Freelance · Full-time</div>
+            <div><strong style="color:#fff">Experience:</strong> 4+ years</div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:12px">
+            <a class="btn" href="#games">My games</a>
+            <button id="skillsBtn" class="btn">Skills</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card reveal" style="height:fit-content">
+        <h4 style="margin:0 0 8px 0;font-weight:700">Contact</h4>
+        <p class="muted">Want to reach me? Click below.</p>
+        <div style="margin-top:12px">
+          <a id="openDiscordBtn" class="btn" href="https://discord.com/users/764805004493586432" target="_blank" rel="noopener">My Discord profile</a>
+        </div>
+      </aside>
+
+      <section class="card reveal" id="skills">
+        <h3>Skills & tools</h3>
+        <div class="grid-3" style="margin-top:12px">
+          <div>
+            <h4 style="margin:0 0 8px 0">Frontend</h4>
+            <ul class="muted" style="margin:0;padding-left:18px">
+              <li>HTML, CSS, JS — semantic & performant</li>
+              <li>React, Vite</li>
+              <li>Animations & UI polish</li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 style="margin:0 0 8px 0">Game dev & backend</h4>
+            <ul class="muted" style="margin:0;padding-left:18px">
+              <li>Python tooling & automation</li>
+              <li>Minecraft servers, plugins, resource packs</li>
+              <li>Discord Bots</li>
+            </ul>
+          </div>
+
+            <div>
+            <h4 style="margin:0 0 8px 0">Skill levels</h4>
+            <div class="muted" style="font-size:13px">JavaScript <span style="float:right">73%</span></div>
+            <div class="skill-track" style="margin-top:6px"><div class="skill-fill" data-val="73%" style="background:linear-gradient(90deg,var(--accent),var(--accent-2))"></div></div>
+            <div class="muted" style="font-size:13px; margin-top:10px">Css <span style="float:right">78%</span></div>
+            <div class="skill-track" style="margin-top:6px"><div class="skill-fill" data-val="78%" style="background:linear-gradient(90deg,var(--accent),var(--accent))"></div></div>
+            <div class="muted" style="font-size:13px; margin-top:10px">Python <span style="float:right">88%</span></div>
+            <div class="skill-track" style="margin-top:6px"><div class="skill-fill" data-val="88%" style="background:linear-gradient(90deg,#34d399,var(--accent))"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card reveal" id="games">
+        <h3>Games I play</h3>
+        <p class="muted">A curated list of games that inspire my work and time.</p>
+        <div class="hscroll" id="gamesScroller" style="margin-top:12px">
+          <div class="game-card tilt" data-game="Hollow Knight"><strong>Hollow Knight</strong><div class="muted" style="margin-top:6px">Tight platforming, excellent atmosphere.</div></div>
+          <div class="game-card tilt" data-game="Rust"><strong>Rust</strong><div class="muted" style="margin-top:6px">Emergent gameplay and server economies.</div></div>
+          <div class="game-card tilt" data-game="Minecraft"><strong>Minecraft</strong><div class="muted" style="margin-top:6px">Builders' sandbox — servers & resource packs are my thing.</div></div>
+          <div class="game-card tilt" data-game="Phasmophobia"><strong>Phasmophobia</strong><div class="muted" style="margin-top:6px">Cozy horror sessions with friends.</div></div>
+          <div class="game-card tilt" data-game="Don't Starve Together"><strong>Don't Starve Together</strong><div class="muted" style="margin-top:6px">Co-op survival, art style, and design.</div></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>© <span id="year"></span> HARMSTONE — Built with a touch of unbelievable.</footer>
+  </div>
+
+  <script>
+    // year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // avatar fallback
+    (function(){ const img = document.getElementById('avatarImg'); if(!img) return; img.onerror = function(){ img.src = 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" rx="18" fill="#08101a"/><text x="50%" y="50%" font-size="40" fill="#94a3b8" dominant-baseline="middle" text-anchor="middle">H</text></svg>'); }; })();
+
+    // smooth anchors
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{ a.addEventListener('click', (e)=>{ const target = document.querySelector(a.getAttribute('href')); if(target){ e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); } }); });
+
+    // skills button (ensure single element behavior)
+    const skillsBtn = document.getElementById('skillsBtn');
+    if (skillsBtn){
+      skillsBtn.addEventListener('click', ()=>{
+        const sk = document.getElementById('skills');
+        if(sk) sk.scrollIntoView({behavior:'smooth',block:'start'});
+        // micro-pop animation
+        skillsBtn.animate([{ transform: 'scale(1)' },{ transform: 'scale(0.98)' },{ transform: 'scale(1)' }], { duration: 260, easing: 'cubic-bezier(.2,.9,.3,1)'});
+      });
+    }
+
+    // reveal + skill bars with staggered entrance
+    (function(){
+      const revealEls = Array.from(document.querySelectorAll('.reveal'));
+      const obs = new IntersectionObserver((entries, o)=>{
+        entries.forEach(en=>{
+          if(en.isIntersecting){
+            const idx = revealEls.indexOf(en.target);
+            const delay = Math.max(0, idx) * 110; // stagger
+            setTimeout(()=>{
+              en.target.classList.add('visible');
+              o.unobserve(en.target);
+            }, delay);
+          }
+        });
+      }, {threshold:0.12});
+      revealEls.forEach(r=>obs.observe(r));
+
+      const fills = document.querySelectorAll('.skill-fill');
+      const sk = document.getElementById('skills');
+      if(sk){
+        const sObs = new IntersectionObserver((entries, o2)=>{
+          entries.forEach(e=>{
+            if(e.isIntersecting){
+              fills.forEach((f,i)=>{ setTimeout(()=>{ f.style.width = f.getAttribute('data-val')||'80%'; }, i*120); });
+              o2.unobserve(e.target);
+            }
+          });
+        }, {threshold:0.2});
+        sObs.observe(sk);
+      }
+    })();
+
+    // tilt cards
+    (function(){ const cards = document.querySelectorAll('.tilt'); cards.forEach(card=>{ card.addEventListener('mousemove', (e)=>{ const r = card.getBoundingClientRect(); const cx = r.left + r.width/2; const cy = r.top + r.height/2; const dx = e.clientX - cx; const dy = e.clientY - cy; card.style.transform = `perspective(800px) rotateX(${dy/(r.height/2)*-2}deg) rotateY(${dx/(r.width/2)*2}deg)`; }); card.addEventListener('mouseleave', ()=>{ card.style.transform=''; }); }); })();
+
+    // ---------------- Enhanced background (improved visuals) ----------------
+    (function(){
+      const canvas = document.getElementById('bgCanvas');
+      if(!canvas){ console.warn('[bg] canvas missing'); return; }
+      const ctx = canvas.getContext('2d');
+      if(!ctx){ console.warn('[bg] 2D context missing'); return; }
+
+      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      function resize(){ DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1)); canvas.width = Math.floor(window.innerWidth * DPR); canvas.height = Math.floor(window.innerHeight * DPR); canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px'; ctx.setTransform(DPR,0,0,DPR,0,0); }
+      resize(); window.addEventListener('resize', ()=>{ resize(); initAll(); });
+
+      console.log('%c[bg] enhanced init DPR:', 'color:#7c3aed;font-weight:700', DPR);
+
+      const mouse = {x:-9999,y:-9999,down:false};
+      window.addEventListener('mousemove', e=>{ mouse.x = e.clientX; mouse.y = e.clientY; });
+      window.addEventListener('mouseleave', ()=>{ mouse.x=-9999; mouse.y=-9999; });
+      window.addEventListener('mousedown', ()=>{ mouse.down = true; });
+      window.addEventListener('mouseup', ()=>{ mouse.down = false; });
+
+      // low power: ON by default (fewer particles)
+      let lowPower = true;
+      // allow toggling with P if needed
+      window.addEventListener('keydown', (e)=>{ if(e.key === 'p' || e.key === 'P'){ lowPower = !lowPower; initAll(); console.log('[bg] lowPower', lowPower); } });
+
+      let tiny = [], medium = [], big = [], stars = [], ripples = [], blobs = [];
+      function rand(min,max){ return min + Math.random()*(max-min); }
+
+      function initParticles(){
+        const w = window.innerWidth; const h = window.innerHeight; const area = w*h;
+        const baseCount = Math.max(40, Math.floor(area/14000));
+        const tCount = Math.floor(baseCount * (lowPower?0.45:1.0));
+        const mCount = Math.floor(baseCount * (lowPower?0.2:0.6));
+        const bCount = Math.floor(baseCount * (lowPower?0.06:0.18));
+
+        tiny = []; medium = []; big = [];
+        const tColors = ['rgba(124,58,237,0.9)','rgba(99,102,241,0.8)','rgba(56,189,248,0.78)'];
+        const mColors = ['rgba(124,58,237,0.5)','rgba(96,165,250,0.45)','rgba(99,102,241,0.42)'];
+        const bColors = ['rgba(124,58,237,0.14)','rgba(96,165,250,0.1)'];
+
+        for(let i=0;i<tCount;i++) tiny.push({x:rand(0,w),y:rand(0,h),vx:rand(-0.6,0.6),vy:rand(-0.6,0.6),r:rand(0.8,2.2),c:tColors[Math.floor(Math.random()*tColors.length)],wob:rand(0,1000),glow:rand(4,12)});
+        for(let i=0;i<mCount;i++) medium.push({x:rand(0,w),y:rand(0,h),vx:rand(-0.3,0.3),vy:rand(-0.3,0.3),r:rand(2.4,5.2),c:mColors[Math.floor(Math.random()*mColors.length)],wob:rand(0,1000),glow:rand(10,30)});
+        for(let i=0;i<bCount;i++) big.push({x:rand(0,w),y:rand(0,h),vx:rand(-0.12,0.12),vy:rand(-0.12,0.12),r:rand(18,48),c:bColors[Math.floor(Math.random()*bColors.length)],wob:rand(0,1000)});
+
+        stars = []; const starCount = Math.floor(area/90000); for(let i=0;i<starCount;i++) stars.push({x:rand(0,w),y:rand(0,h),a:rand(0.06,0.28),r:rand(0.3,1.1),tw:rand(0.001,0.008)});
+
+        blobs = [{x:w*0.18,y:h*0.15,dx:0.02,dy:0.012,r:Math.max(w,h)*0.6,clr:'rgba(124,58,237,0.12)'},{x:w*0.78,y:h*0.82,dx:-0.02,dy:-0.014,r:Math.max(w,h)*0.5,clr:'rgba(96,165,250,0.09)'}];
+
+        ripples = [];
+        console.log('%c[bg] particles init','color:#60a5fa;font-weight:700', 'tiny', tiny.length, 'medium', medium.length, 'big', big.length, 'stars', stars.length);
+      }
+
+      function initAll(){ initParticles(); }
+      initAll();
+
+      window.addEventListener('click', (e)=>{ ripples.push({x:e.clientX,y:e.clientY,t:0}); if(ripples.length>8) ripples.shift(); });
+
+      // noise for texture
+      let noiseCanvas = null, noiseCtx = null, noiseImg = null;
+      function genNoise(){ noiseCanvas = document.createElement('canvas'); noiseCanvas.width = 256; noiseCanvas.height = 256; noiseCtx = noiseCanvas.getContext('2d'); const id = noiseCtx.createImageData(noiseCanvas.width, noiseCanvas.height); for(let i=0;i<id.data.length;i+=4){ const v = Math.floor(220 + Math.random()*35); id.data[i]=v; id.data[i+1]=v; id.data[i+2]=v; id.data[i+3]=Math.floor(8+Math.random()*10); } noiseCtx.putImageData(id,0,0); noiseImg = new Image(); noiseImg.src = noiseCanvas.toDataURL(); }
+      genNoise();
+
+      let last = performance.now();
+      function draw(now){ const dt = Math.max(0, now - last); last = now; const w = window.innerWidth; const h = window.innerHeight;
+
+        // motion-trail base
+        ctx.fillStyle = 'rgba(2,4,8,0.32)'; ctx.fillRect(0,0,w,h);
+
+        // base gradient
+        const base = ctx.createLinearGradient(0,0, w, h); base.addColorStop(0, 'rgba(6,10,20,0.22)'); base.addColorStop(1, 'rgba(4,8,14,0.55)'); ctx.fillStyle = base; ctx.fillRect(0,0,w,h);
+
+        // stars
+        for(const s of stars){ const tw = 0.5 + Math.sin(now*s.tw*1000 + s.r)*0.5; ctx.globalAlpha = s.a * tw; ctx.beginPath(); ctx.fillStyle = 'white'; ctx.arc(s.x, s.y, s.r,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha = 1;
+
+        // blobs (additive)
+        ctx.globalCompositeOperation = 'lighter'; const t = now / 1000; for(const b of blobs){ b.x += Math.sin(t*b.dx)*0.25; b.y += Math.cos(t*b.dy)*0.18; const rg = ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r); rg.addColorStop(0, b.clr); rg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = rg; ctx.fillRect(0,0,w,h); } ctx.globalCompositeOperation = 'source-over';
+
+        // draw big glows
+        for(const p of big){ p.wob += 0.006 * (dt/16); p.x += p.vx; p.y += p.vy; if(p.x< -50) p.x = w+50; if(p.x>w+50) p.x=-50; if(p.y<-50) p.y=h+50; if(p.y>h+50) p.y=-50; ctx.beginPath(); ctx.shadowColor = p.c; ctx.shadowBlur = 60; ctx.fillStyle = p.c; ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; }
+
+        // medium
+        for(const p of medium){ p.wob += 0.01*(dt/16); p.x += p.vx + Math.sin(p.wob)*0.04; p.y += p.vy + Math.cos(p.wob)*0.04; if(p.x< -20) p.x = w+20; if(p.x>w+20) p.x=-20; if(p.y<-20) p.y=h+20; if(p.y>h+20) p.y=-20; const dx = p.x - mouse.x; const dy = p.y - mouse.y; const d = Math.hypot(dx,dy); if(d < 160){ const f = (160-d) * 0.0012 * (mouse.down?2.0:1.0); p.vx += (dx/(d+0.0001))*f; p.vy += (dy/(d+0.0001))*f; } p.vx*=0.994; p.vy*=0.994; ctx.beginPath(); ctx.shadowColor = p.c; ctx.shadowBlur = p.glow; ctx.fillStyle = p.c; ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; }
+
+        // tiny + connections
+        for(const p of tiny){ p.wob += 0.014*(dt/16); p.x += p.vx + Math.sin(p.wob)*0.03; p.y += p.vy + Math.cos(p.wob)*0.03; if(p.x< -10) p.x = w+10; if(p.x>w+10) p.x=-10; if(p.y<-10) p.y=h+10; if(p.y>h+10) p.y=-10; const dx = p.x - mouse.x; const dy = p.y - mouse.y; const d = Math.hypot(dx,dy); if(d < 120){ const f = (120-d) * 0.0009 * (mouse.down?1.8:1.0); p.vx += (dx/(d+0.0001))*f; p.vy += (dy/(d+0.0001))*f; } p.vx*=0.993; p.vy*=0.993; ctx.beginPath(); ctx.fillStyle = p.c; ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); }
+
+        // connections (sample neighbors)
+        const maxLink = 110; ctx.lineWidth = 0.45; for(let i=0;i<tiny.length;i++){ const a=tiny[i]; for(let j=i+1;j<Math.min(tiny.length,i+6);j++){ const b=tiny[j]; const dx=a.x-b.x, dy=a.y-b.y; const dist=Math.hypot(dx,dy); if(dist<maxLink){ const alpha=(1-dist/maxLink)*0.08; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.strokeStyle = 'rgba(200,220,255,'+alpha+')'; ctx.stroke(); } } }
+
+        // ripples
+        for(let i=ripples.length-1;i>=0;i--){ const r=ripples[i]; r.t += dt; const dur = 900; const p = r.t/dur; if(p>1){ ripples.splice(i,1); continue; } ctx.beginPath(); ctx.strokeStyle = 'rgba(140,180,255,' + (1-p)*0.25 + ')'; ctx.lineWidth = 2*(1-p); ctx.arc(r.x,r.y, p*220, 0, Math.PI*2); ctx.stroke(); }
+
+        // noise overlay
+        if(noiseImg && noiseImg.complete){ ctx.globalAlpha = 0.03; ctx.drawImage(noiseImg,0,0,w,h); ctx.globalAlpha = 1; }
+
+        requestAnimationFrame(draw);
+      }
+
+      requestAnimationFrame(draw);
+      setTimeout(()=>{ console.log('[bg] enhanced running — lowPower is ON by default (press P to toggle)'); },900);
+    })();
+  </script>
+</body>
+</html>
